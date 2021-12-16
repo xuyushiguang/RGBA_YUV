@@ -322,4 +322,38 @@
     return YES;
 }
 
+
++(CVPixelBufferRef*)pixelBufferFromYUV:(uint8_t *)yBuffer vBuffer:(uint8_t *)uBuffer uBuffer:(uint8_t *)vBuffer width:(int)width height:(int)height  {
+    NSDictionary *pixelAttributes = @{(id)kCVPixelBufferIOSurfacePropertiesKey : @{}};
+    CVPixelBufferRef pixelBuffer;
+    /// NumberOfElementsForChroma is width*height/4 because both U plane and V plane are quarter size of Y plane
+    CGFloat uPlaneSize =  width * height / 4;
+    CGFloat vPlaneSize = width * height / 4;
+    CGFloat numberOfElementsForChroma = uPlaneSize + vPlaneSize;
+
+    CVReturn result = CVPixelBufferCreate(kCFAllocatorDefault,
+                                          width,
+                                          height,
+                                          kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+                                          (__bridge CFDictionaryRef)(pixelAttributes),
+                                          &pixelBuffer);
+
+    ///for simplicity and speed create a combined UV panel to hold the pixels
+    uint8_t *uvPlane = calloc(numberOfElementsForChroma, sizeof(uint8_t));
+    memcpy(uvPlane, uBuffer, uPlaneSize);
+    memcpy(uvPlane += (uint8_t)(uPlaneSize), vBuffer, vPlaneSize);
+    
+    
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+    uint8_t *yDestPlane = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0);
+    memcpy(yDestPlane, yBuffer, width * height);
+    
+    uint8_t *uvDestPlane = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 1);
+    memcpy(uvDestPlane, uvPlane, numberOfElementsForChroma);
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    CVPixelBufferRelease(pixelBuffer);
+    free(uvPlane);
+    return pixelBuffer;
+}
+
 @end

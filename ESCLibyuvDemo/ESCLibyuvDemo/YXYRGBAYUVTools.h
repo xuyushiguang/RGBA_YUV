@@ -47,6 +47,9 @@ NS_ASSUME_NONNULL_BEGIN
                                            vdata:(uint8_t *_Nullable*_Nullable)vdata
                                            width:(int)width
                                           height:(int)height;
+
++(CVPixelBufferRef*)pixelBufferFromYUV:(uint8_t *)yBuffer vBuffer:(uint8_t *)uBuffer uBuffer:(uint8_t *)vBuffer width:(int)width;
+
 @end
 
 NS_ASSUME_NONNULL_END
